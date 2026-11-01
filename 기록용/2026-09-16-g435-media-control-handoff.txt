@@ -1,0 +1,58 @@
+# Session handoff
+
+- Updated: 2026-09-16 23:26 (Asia/Seoul)
+- Objective: Logitech G435에서 부족한 미디어·알림 기능을 파악하고, 갤럭시와 함께 사용할 수 있는 현실적인 제어 방식을 설계한다.
+- Status: in progress
+
+## Current state
+- G435 사용자 매뉴얼의 모든 버튼 조작을 정리했다.
+- G435에는 헤드셋 자체의 재생/일시정지, 다음/이전 곡, 통화 수신/종료, 음성비서 호출, 버튼 재매핑 기능이 문서화되어 있지 않다.
+- 실제 G435 또는 갤럭시 기기에서 버튼 입력과 알림 읽기를 시험한 적은 아직 없다.
+
+## Completed
+- documented: G435 매뉴얼 기반 버튼 조작을 확인했다.
+  - 전원: 꺼진 상태에서 1.5초 누르면 켜짐, 켜진 상태에서 3초 누르면 꺼짐, 짧게 누르면 배터리 확인.
+  - 음소거: 짧게 누르면 마이크 음소거/해제, 3초 이상 누르면 LIGHTSPEED/Bluetooth 전환, 두 번 누르면 사이드톤 전환.
+  - 전원+음소거 3초 이상: Bluetooth 페어링.
+  - 음소거+볼륨 업/다운: 짧게는 사이드톤 조절, 3초 이상은 최대 음량 100/85 dB 설정.
+- proposed: 사용하지 않는 짧은 동시 누름을 미디어 제어로 배치하는 안을 정했다.
+  - 전원+음소거 짧게: 재생/일시정지.
+  - 전원+볼륨 업 짧게: 다음 곡.
+  - 전원+볼륨 다운 짧게: 이전 곡.
+- tested: 없음. 위 매핑은 G435 펌웨어가 지원하는 기능이 아니라, 리매핑 또는 별도 구현이 가능하다는 전제의 설계안이다.
+- `.claude/skills/session-handoff/SKILL.md`에 이 프로젝트용 인계 스킬을 추가하고 유효성 검사를 통과했다.
+
+## Decisions and constraints
+- 노이즈 캔슬링처럼 하드웨어상 불가능한 기능은 비교 대상에서 제외한다.
+- G435의 기존 사이드톤·음량 제한 조합(음소거+볼륨 업/다운)은 미디어 제어에 재사용하지 않는다.
+- 전원+음소거의 3초 이상 길게 누르기는 Bluetooth 페어링으로 보존한다. 재생/일시정지 제안은 짧은 동시 누름만 대상으로 한다.
+- G435 자체에 버튼 재매핑 지원이 확인되지 않았으므로, 제안과 구현 가능 여부를 혼동하지 않는다.
+- Galaxy Wearable의 앱별 알림 읽기 및 간단히/전체 내용 읽기는 Galaxy Buds 연동 기능이다. G435에 그대로 적용된다고 가정하지 않는다.
+
+## Device and integration evidence
+- documented: G435는 Bluetooth와 LIGHTSPEED를 전환해 사용할 수 있다. 갤럭시의 알림 음성 출력은 G435를 Bluetooth로 연결했을 때 검토 대상이다.
+- documented: Google Assistant/Gemini는 일부 Bluetooth 헤드폰에서 앱별 음성 알림을 지원한다.
+- documented: Galaxy Modes and Routines는 조건 또는 키워드에 맞는 중요 알림을 읽도록 구성할 수 있다.
+- unverified: 현재 사용 중인 갤럭시 모델·One UI 버전에서 G435가 음성 알림 기기로 표시되는지, 앱별 필터링이 가능한지.
+- unverified: 앱 이름만 읽기와 알림 전체 읽기를 G435용 기본 기능만으로 앱별 선택할 수 있는지. 이 수준의 세밀한 동작은 별도 알림 TTS/자동화 앱이 필요할 수 있다.
+
+## Files and evidence
+- `.claude/skills/session-handoff/SKILL.md`: G435 미디어 제어 프로젝트용 인계 규칙. 유효성 검사 완료.
+- G435 매뉴얼: https://ko.manuals.plus/logitech/g435-lightspeed-wireless-game-headset-manual
+- Logitech Bluetooth 페어링 안내: https://support.logi.com/hc/en-us/articles/4409383783959-How-to-connect-your-G435-using-Bluetooth
+- Google 헤드폰 음성 알림 안내: https://support.google.com/assistant/answer/9027902?hl=ko
+- Samsung Galaxy Buds 알림 읽기 안내: https://www.samsung.com/us/support/troubleshoot/TSG10007404/
+
+## Remaining TODO
+- G435 연결 상태에서 각 물리 버튼과 동시 누름이 Android 또는 PC에 별도 입력으로 전달되는지 시험한다.
+- 사용할 갤럭시 모델과 One UI 버전을 확인한 뒤 Google Assistant/Gemini의 음성 알림 메뉴와 앱별 필터 기능을 시험한다.
+- 전체 알림 내용 읽기가 필요하면 알림 접근 권한을 사용하는 자동화/TTS 방식의 보안·배터리·사용성 영향을 비교한다.
+- 실제 구현을 원할 경우, G435 단독 펌웨어 수정인지 휴대폰 측 자동화인지 범위를 먼저 결정한다.
+
+## Next action
+- G435를 갤럭시에 Bluetooth로 연결한 뒤, 휴대폰의 `연결된 기기 > G435 > 디지털 어시스턴트 > 음성 알림` 또는 Assistant/Gemini 설정에서 음성 알림과 앱 선택 메뉴가 표시되는지 확인한다.
+
+## Blockers or open questions
+- 테스트할 G435와 갤럭시 기기의 실제 접근 권한이 없다.
+- G435 버튼이 범용 리매퍼가 읽을 수 있는 입력을 보내는지 확인되지 않았다.
+- 목표가 제품 기능 제안인지, Android 자동화 구현인지, G435 하드웨어/펌웨어 개조인지 아직 정해지지 않았다.

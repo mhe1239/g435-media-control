@@ -1,0 +1,18 @@
+# Raw diagnostic logs can hold Bluetooth identifiers and system info (AGENTS.md); keep them local.
+*.jsonl
+diagnostics/
+
+# Python
+__pycache__/
+
+# IDE and local tooling output
+.idea/
+graphify-out/
+.claude/settings.local.json
+
+# Android build output and machine-specific SDK path
+android-signal-probe/.gradle/
+android-signal-probe/.idea/
+android-signal-probe/build/
+android-signal-probe/app/build/
+android-signal-probe/local.properties
