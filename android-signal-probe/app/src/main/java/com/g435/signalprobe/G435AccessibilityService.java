@@ -1,6 +1,8 @@
 package com.g435.signalprobe;
 
 import android.accessibilityservice.AccessibilityService;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -60,7 +62,43 @@ public final class G435AccessibilityService extends AccessibilityService {
             runLength = 0;
             stopSilenceKeeper();
         }
+        if (GestureSettings.ENABLED.equals(key) || GestureSettings.KEEP_ALIVE.equals(key)) {
+            scheduleKeepAlive();
+        }
     };
+
+    // The G435 powers off after 30 min without use; a short silence well inside that is meant to reset it.
+    // shortcut: fixed 20 min / 10 s, untested whether the G435 counts digital silence as use.
+    static final long KEEP_ALIVE_INTERVAL_MS = 20 * 60 * 1000;
+    static final long KEEP_ALIVE_PULSE_MS = 10 * 1000;
+    private static final String KEEP_ALIVE_ACTION = "com.g435.signalprobe.KEEP_ALIVE";
+    private final BroadcastReceiver keepAliveReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // Skipped while anything plays: the G435 is in use, or the paused-player silence already runs.
+            if (silenceKeeper == null && isG435Connected()
+                    && !getSystemService(AudioManager.class).isMusicActive()) {
+                startSilenceKeeper(KEEP_ALIVE_PULSE_MS);
+            }
+            scheduleKeepAlive();
+        }
+    };
+    private PendingIntent keepAliveIntent;
+
+    private void scheduleKeepAlive() {
+        AlarmManager alarms = getSystemService(AlarmManager.class);
+        alarms.cancel(keepAliveIntent);
+        if (!GestureSettings.enabled(this) || !GestureSettings.keepAlive(this)) {
+            return;
+        }
+        // A Handler stops with the CPU when the phone sleeps, which is exactly when the G435 sits unused.
+        long at = SystemClock.elapsedRealtime() + KEEP_ALIVE_INTERVAL_MS;
+        if (Build.VERSION.SDK_INT < 31 || alarms.canScheduleExactAlarms()) {
+            alarms.setExactAndAllowWhileIdle(AlarmManager.ELAPSED_REALTIME_WAKEUP, at, keepAliveIntent);
+        } else {
+            alarms.setAndAllowWhileIdle(AlarmManager.ELAPSED_REALTIME_WAKEUP, at, keepAliveIntent);
+        }
+    }
 
     // shortcut: matches the Bluetooth name, so a headset renamed without "G435" is ignored;
     // match the Logitech address prefix if the user renames it.
@@ -134,7 +172,7 @@ public final class G435AccessibilityService extends AccessibilityService {
         if (silenceKeeper != null) {
             stopSilenceKeeper();
         } else if (pausing) {
-            startSilenceKeeper();
+            startSilenceKeeper(GestureSettings.silenceForever(this) ? 0 : SILENCE_KEEPER_MS);
         }
     }
 
@@ -169,7 +207,8 @@ public final class G435AccessibilityService extends AccessibilityService {
     private final Runnable silenceTimeout = this::stopSilenceKeeper;
     private AudioTrack silenceKeeper;
 
-    private void startSilenceKeeper() {
+    /** Plays silence for durationMs, or until stopped when it is 0. */
+    private void startSilenceKeeper(long durationMs) {
         // One second of 16-bit stereo zeros, looped. No audio focus request, so the paused player keeps its session.
         byte[] silence = new byte[SILENCE_RATE * 4];
         silenceKeeper = new AudioTrack.Builder()
@@ -188,10 +227,10 @@ public final class G435AccessibilityService extends AccessibilityService {
         silenceKeeper.write(silence, 0, silence.length);
         silenceKeeper.setLoopPoints(0, SILENCE_RATE, -1);
         silenceKeeper.play();
-        if (!GestureSettings.silenceForever(this)) {
-            handler.postDelayed(silenceTimeout, SILENCE_KEEPER_MS);
+        if (durationMs > 0) {
+            handler.postDelayed(silenceTimeout, durationMs);
         }
-        SignalLog.append(this, "silence_keeper", "started");
+        SignalLog.append(this, "silence_keeper", "started for " + durationMs + " ms");
     }
 
     private void stopSilenceKeeper() {
@@ -213,7 +252,17 @@ public final class G435AccessibilityService extends AccessibilityService {
         } else {
             registerReceiver(volumeReceiver, filter);
         }
+        IntentFilter keepAliveFilter = new IntentFilter(KEEP_ALIVE_ACTION);
+        if (Build.VERSION.SDK_INT >= 33) {
+            registerReceiver(keepAliveReceiver, keepAliveFilter, Context.RECEIVER_NOT_EXPORTED);
+        } else {
+            registerReceiver(keepAliveReceiver, keepAliveFilter);
+        }
         receiverRegistered = true;
+        keepAliveIntent = PendingIntent.getBroadcast(this, 0,
+                new Intent(KEEP_ALIVE_ACTION).setPackage(getPackageName()),
+                PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+        scheduleKeepAlive();
         GestureSettings.prefs(this).registerOnSharedPreferenceChangeListener(settingsListener);
         SignalLog.append(this, "accessibility_status", "service_connected");
     }
@@ -223,7 +272,9 @@ public final class G435AccessibilityService extends AccessibilityService {
         stopSilenceKeeper();
         GestureSettings.prefs(this).unregisterOnSharedPreferenceChangeListener(settingsListener);
         if (receiverRegistered) {
+            getSystemService(AlarmManager.class).cancel(keepAliveIntent);
             unregisterReceiver(volumeReceiver);
+            unregisterReceiver(keepAliveReceiver);
         }
         super.onDestroy();
     }

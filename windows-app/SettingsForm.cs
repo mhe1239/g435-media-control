@@ -20,6 +20,8 @@ sealed class SettingsForm : Form
         var skipNote = new Label { Text = "끄면 +− / −+ 재생/일시정지가 1초 기다리지 않고 바로 실행됩니다.", AutoSize = true, ForeColor = SystemColors.GrayText };
         var forever = new CheckBox { Text = "일시정지 중 무음을 계속 유지 (끄면 10분)", Checked = settings.SilenceForever, AutoSize = true };
         var foreverNote = new Label { Text = "무음이 꺼지면 약 10초 뒤부터 G435 버튼으로 재개할 수 없습니다.", AutoSize = true, ForeColor = SystemColors.GrayText };
+        var keepAlive = new CheckBox { Text = "G435 자동 꺼짐 방지 (20분마다 무음 10초)", Checked = settings.KeepAlive, AutoSize = true };
+        var keepAliveNote = new Label { Text = "G435는 30분 동안 쓰지 않으면 꺼집니다.", AutoSize = true, ForeColor = SystemColors.GrayText };
         var theme = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Width = 200 };
         SystemColorMode[] modes = [SystemColorMode.System, SystemColorMode.Classic, SystemColorMode.Dark];
         theme.Items.AddRange(["시스템 설정 따름", "라이트", "다크"]);
@@ -38,15 +40,17 @@ sealed class SettingsForm : Form
             settings.Enabled = enabled.Checked;
             settings.SkipEnabled = skip.Checked;
             settings.SilenceForever = forever.Checked;
-            skip.Enabled = forever.Enabled = enabled.Checked;
+            settings.KeepAlive = keepAlive.Checked;
+            skip.Enabled = forever.Enabled = keepAlive.Enabled = enabled.Checked;
             settings.Save();
             changed();
         }
         enabled.CheckedChanged += (_, _) => Apply();
         skip.CheckedChanged += (_, _) => Apply();
         forever.CheckedChanged += (_, _) => Apply();
+        keepAlive.CheckedChanged += (_, _) => Apply();
         startup.CheckedChanged += (_, _) => Settings.StartWithWindows = startup.Checked;
-        skip.Enabled = forever.Enabled = enabled.Checked;
+        skip.Enabled = forever.Enabled = keepAlive.Enabled = enabled.Checked;
 
         var layout = new FlowLayoutPanel
         {
@@ -56,7 +60,7 @@ sealed class SettingsForm : Form
             Padding = new Padding(16),
             WrapContents = false,
         };
-        layout.Controls.AddRange([status, enabled, skip, skipNote, forever, foreverNote, startup, themeLabel, theme]);
+        layout.Controls.AddRange([status, enabled, skip, skipNote, forever, foreverNote, keepAlive, keepAliveNote, startup, themeLabel, theme]);
         foreach (Control c in layout.Controls)
             c.Margin = new Padding(0, 0, 0, c is Label && c != status && c != themeLabel ? 12 : 6);
         status.Margin = new Padding(0, 0, 0, 12);

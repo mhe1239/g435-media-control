@@ -8,6 +8,7 @@ sealed class Settings
     public bool Enabled { get; set; } = true;
     public bool SkipEnabled { get; set; } = true;
     public bool SilenceForever { get; set; }
+    public bool KeepAlive { get; set; }
     // Classic is the light theme.
     public SystemColorMode Theme { get; set; } = SystemColorMode.System;
 

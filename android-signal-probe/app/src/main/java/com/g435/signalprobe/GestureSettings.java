@@ -8,6 +8,7 @@ final class GestureSettings {
     static final String ENABLED = "enabled";
     static final String SKIP = "skip";
     static final String SILENCE_FOREVER = "silence_forever";
+    static final String KEEP_ALIVE = "keep_alive";
     /** "system", "light" or "dark". */
     static final String THEME = "theme";
 
@@ -32,5 +33,9 @@ final class GestureSettings {
 
     static boolean silenceForever(Context context) {
         return prefs(context).getBoolean(SILENCE_FOREVER, false);
+    }
+
+    static boolean keepAlive(Context context) {
+        return prefs(context).getBoolean(KEEP_ALIVE, false);
     }
 }

@@ -16,11 +16,16 @@ sealed class GestureEngine : IDisposable
     // shortcut: polls the default output every 2 s instead of listening for endpoint events; fine for a connect check.
     const int WatchIntervalMs = 2000;
     const int SilenceKeeperMs = 10 * 60 * 1000;
+    // The G435 powers off after 30 min without use; a short silence well inside that is meant to reset it.
+    // shortcut: fixed 20 min / 10 s, untested whether the G435 counts digital silence as use.
+    const int KeepAliveIntervalMs = 20 * 60 * 1000;
+    const int KeepAlivePulseMs = 10 * 1000;
 
     readonly Settings settings;
     readonly object gate = new();
     readonly Stopwatch clock = Stopwatch.StartNew();
     readonly System.Threading.Timer watchTimer;
+    readonly System.Threading.Timer keepAliveTimer;
     MMDeviceEnumerator? enumerator;
     MMDevice? device;
     AudioEndpointVolume? volume;
@@ -47,6 +52,24 @@ sealed class GestureEngine : IDisposable
     {
         this.settings = settings;
         watchTimer = new System.Threading.Timer(_ => Watch(), null, Timeout.Infinite, Timeout.Infinite);
+        keepAliveTimer = new System.Threading.Timer(_ => KeepAlive(), null, KeepAliveIntervalMs, KeepAliveIntervalMs);
+    }
+
+    void KeepAlive()
+    {
+        if (!settings.Enabled || !settings.KeepAlive)
+            return;
+        lock (silenceGate)
+            if (silence != null)
+                return; // the paused-player silence already keeps it busy
+        try
+        {
+            StartSilence(KeepAlivePulseMs);
+        }
+        catch (Exception e)
+        {
+            Log("keep_alive_error", new { message = e.Message });
+        }
     }
 
     public void Start() => watchTimer.Change(0, Timeout.Infinite);
@@ -209,7 +232,7 @@ sealed class GestureEngine : IDisposable
         string? status = PlaybackStatus();
         Log("media_state", new { status });
         if (status == "Paused")
-            StartSilence();
+            StartSilence(settings.SilenceForever ? Timeout.Infinite : SilenceKeeperMs);
         else
             StopSilence();
     }
@@ -255,22 +278,28 @@ sealed class GestureEngine : IDisposable
 
     // About 10 s after playback pauses, G435 +/− stop reaching Windows (tested 2026-11-01), so a resume
     // gesture is never seen. Playing silence to the G435 keeps the Bluetooth stream up.
-    void StartSilence()
+    // A keeper already running gets the new duration, so a pause during a keep-alive pulse still keeps 10 min.
+    void StartSilence(int durationMs)
     {
         MMDevice? target;
         lock (gate)
             target = device;
         lock (silenceGate)
         {
-            if (silence != null || target == null)
+            if (target == null)
                 return;
-            silence = new WasapiOut(target, AudioClientShareMode.Shared, false, 200);
-            silence.Init(new SilenceProvider(target.AudioClient.MixFormat));
-            silence.Play();
-            if (!settings.SilenceForever)
-                silenceTimer = new System.Threading.Timer(_ => StopSilence(), null, SilenceKeeperMs, Timeout.Infinite);
+            if (silence == null)
+            {
+                silence = new WasapiOut(target, AudioClientShareMode.Shared, false, 200);
+                silence.Init(new SilenceProvider(target.AudioClient.MixFormat));
+                silence.Play();
+            }
+            silenceTimer?.Dispose();
+            silenceTimer = durationMs == Timeout.Infinite
+                ? null
+                : new System.Threading.Timer(_ => StopSilence(), null, durationMs, Timeout.Infinite);
         }
-        Log("silence_keeper", new { action = "started", forever = settings.SilenceForever });
+        Log("silence_keeper", new { action = "started", durationMs });
     }
 
     void StopSilence()
@@ -294,6 +323,7 @@ sealed class GestureEngine : IDisposable
         {
             disposed = true;
             watchTimer.Dispose();
+            keepAliveTimer.Dispose();
         }
         Detach();
         enumerator?.Dispose();

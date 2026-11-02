@@ -55,12 +55,17 @@ public final class MainActivity extends Activity {
         Switch forever = addSwitch(root, prefs, GestureSettings.SILENCE_FOREVER, GestureSettings.silenceForever(this),
                 "일시정지 중 무음을 계속 유지 (끄면 10분)",
                 "무음이 꺼지면 몇 초 뒤부터 G435 버튼으로 재개할 수 없습니다.");
+        Switch keepAlive = addSwitch(root, prefs, GestureSettings.KEEP_ALIVE, GestureSettings.keepAlive(this),
+                "G435 자동 꺼짐 방지 (20분마다 무음 10초)",
+                "G435는 30분 동안 쓰지 않으면 꺼집니다.");
         skip.setEnabled(enabled.isChecked());
         forever.setEnabled(enabled.isChecked());
+        keepAlive.setEnabled(enabled.isChecked());
         enabled.setOnCheckedChangeListener((view, checked) -> {
             prefs.edit().putBoolean(GestureSettings.ENABLED, checked).apply();
             skip.setEnabled(checked);
             forever.setEnabled(checked);
+            keepAlive.setEnabled(checked);
         });
 
         TextView themeLabel = new TextView(this);
