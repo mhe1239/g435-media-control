@@ -1,6 +1,6 @@
 # Session handoff
 
-- Updated: 2026-11-02 00:14 (Asia/Seoul)
+- Updated: 2026-11-02 13:45 (Asia/Seoul)
 - Objective: Bluetooth G435 버튼으로 갤럭시 재생/일시정지를 제어하고(1순위), 이후 다음/이전 곡·알림 읽기를 검토한다.
 - Status: in progress
 
@@ -14,6 +14,7 @@
 - tested (Windows, 2026-11-01 23:41–23:42): `+−+` 다음 곡, `−+−` 이전 곡이 Spotify와 YouTube 재생목록(23:43)에서 작동한다. Chrome·Spotify를 같이 열면 YouTube 영상 전환 순간 현재 세션이 Spotify로 바뀌어 제스처가 Spotify로 갈 수 있다. 두 번 누름은 세 번째 누름을 1초 기다린 뒤 재생/일시정지한다. YouTube 단일 영상은 Chrome 세션이 다음/이전을 꺼둬서 넘어가지 않는다.
 - tested (Android, 2026-11-01 23:55–23:56): 같은 `+−+`/`−+−`를 폰에도 넣었고 Chrome YouTube 재생목록(일시정지·재개 뒤 포함), AudioSeeker(일시정지 중 넘김 포함), Samsung Music(11-02 00:01)에서 넘어갔다. 넘김 뒤 볼륨을 시작 값으로 되돌린다(Android 00:05 확인, Windows 00:10–00:12 확인. Windows는 즉시 복원하면 G435가 자기 볼륨을 다시 보내 덮어써서 0.5초 뒤 복원). 그 전 23:50–23:52에는 Chrome 세션이 넘김 지원(`actions=334`)을 꺼둬 실패했다. 원인 미확인. 확인: `adb shell dumpsys media_session`의 Chrome `actions`(382면 넘김 포함).
 - 2026-11-02 00:17 Android 앱을 정리했다: 진단 화면(MediaSession)과 키 기록을 지우고 사용법·접근성 상태·설정 버튼 화면만 남겼다. 이름은 "G435 미디어 제스처", 패키지는 그대로 `com.g435.signalprobe`. 볼륨·제스처 로그(`files/g435-signal-log.jsonl`)는 유지한다. 이제 화면을 열어도 볼륨을 가로채지 않는다. 접근성 이벤트 종류는 `typeAllMask`로 둬야 한다: `typeAnnouncement`로 줄였더니 삼성 Freecess가 앱을 얼려 볼륨 신호를 놓쳤다(00:19). 되돌린 뒤 00:22 재생/일시정지·다음·이전·볼륨 복원 확인.
+- tested (2026-11-02 13:24–13:41): Windows C# 트레이 앱 `windows-app/`(.NET 10, WinForms, NAudio.Wasapi)과 Android 앱에 같은 설정(제스처 사용, 곡 넘기기 사용, 무음 계속 유지, 테마 시스템/라이트/다크)을 넣고 사용자가 모두 확인했다. G435 연결 시에만 동작(Windows: 기본 출력 이름 2초 폴링, Android: A2DP 이름). Android도 복원을 0.5초 늦춰야 G435와 볼륨이 맞는다. targetSdk 35라 화면에 시스템 바 여백을 준다. [보고서](../docs/reports/261102-1345-12-apps-settings-csharp.md)
 
 ## Decisions and constraints
 

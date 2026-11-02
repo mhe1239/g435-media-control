@@ -32,10 +32,24 @@
 | 2026-10-31 22:48–23:40 | [Android G435 재생/일시정지 제스처](docs/reports/261031-2341-09-android-play-pause-gesture.md) |
 | 2026-11-01 14:53–16:01 | [Android 전원·마이크 버튼 신호 없음(HCI snoop)](docs/reports/261101-1605-10-android-power-mic-hci.md) |
 | 2026-11-01 22:43–23:11 | [Windows G435 재생/일시정지 제스처](docs/reports/261101-2312-11-windows-play-pause-gesture.md) |
+| 2026-11-02 00:30–13:41 | [Windows C# 앱과 두 앱의 설정](docs/reports/261102-1345-12-apps-settings-csharp.md) |
 
 현재 명세는 [기술 문서](docs/02-specs.md), 최신 판단은 [제품 상태](docs/03-product-plan.md)를 따릅니다. 기존 `기록용/` TXT는 당시 기록으로 보존합니다. 문서 구조는 [Austin Docs Architecture](https://github.com/EunHyeokJung/austin-docs-architecture)를 참고했습니다.
 
-## 실행
+## 사용법 (G435 미디어 제스처)
+
+| 누름 | 동작 |
+|---|---|
+| `+−` 또는 `−+` | 재생/일시정지 |
+| `+−+` | 다음 곡 (볼륨은 원래대로) |
+| `−+−` | 이전 곡 (볼륨은 원래대로) |
+
+두 앱 모두 설정이 같습니다: 제스처 사용, 곡 넘기기 사용(끄면 재생/일시정지가 1초 기다리지 않음), 일시정지 중 무음 계속 유지(끄면 10분). G435가 연결돼 있을 때만 동작하고, 화면은 시스템의 라이트/다크 모드를 따릅니다.
+
+- **Windows**: [`windows-app/`](windows-app) C# 트레이 앱. G435가 기본 출력이 되면 동작합니다. 빌드: `dotnet build windows-app -c Release` (.NET 10 SDK). 설정 창에서 Windows 시작 시 실행을 켤 수 있습니다. 로그: `%LOCALAPPDATA%\G435MediaGesture\log.jsonl`.
+- **Android**: [`android-signal-probe/`](android-signal-probe) 앱 "G435 미디어 제스처". 설치 후 앱의 버튼으로 접근성 설정을 열어 서비스를 직접 켭니다.
+
+## 진단 도구 실행
 
 G435를 PC에 Bluetooth로 연결한 뒤 PowerShell에서 실행합니다. 이번 프로젝트의 시험에는 LIGHTSPEED USB 동글을 사용하지 않습니다.
 
@@ -46,7 +60,7 @@ python .\g435_signal_probe.py
 
 그 상태에서 네 버튼을 각각 한 번씩 눌러봅니다. 종료는 `Ctrl+C`입니다.
 
-재생/일시정지 제스처는 G435가 Windows 기본 출력일 때 다음으로 실행합니다. **G435 +/−를 1.5초 안에 반대로 누르면** 재생/일시정지합니다. 제스처로 정지하면 재개 신호를 받으려고 무음을 최대 10분 재생합니다. 자세한 내용은 [보고서](docs/reports/261101-2312-11-windows-play-pause-gesture.md)를 참고합니다.
+`g435_media_gesture.py`는 C# 앱 이전의 Python 제스처 리스너입니다(설정 없음). 두 프로그램은 같은 이름의 뮤텍스를 써서 동시에 실행되지 않습니다. 자세한 내용은 [보고서](docs/reports/261101-2312-11-windows-play-pause-gesture.md)를 참고합니다.
 
 ```powershell
 python .\g435_media_gesture.py
@@ -71,7 +85,7 @@ G435 설명서상 전원+음소거 3초 이상은 Bluetooth 페어링입니다. 
 android-signal-probe/
 ```
 
-앱은 `MediaSession`을 활성화하고 `MEDIA_PLAY_PAUSE`, `MEDIA_NEXT`, `MEDIA_PREVIOUS`, `HEADSETHOOK`, `VOLUME_*`, `POWER` 이벤트를 화면과 앱 내부 JSONL 로그에 기록합니다.
+진단 화면(`MediaSession` 키 기록)은 2026-11-02에 지웠습니다. 지금 앱은 제스처 앱이며, 볼륨 단계와 제스처 결과만 앱 내부 JSONL 로그에 남깁니다.
 
 접근성 서비스(“G435 미디어 제스처”)를 켜면 **G435 +/−를 1.5초 안에 반대로 누를 때(+→− 또는 −→+) 재생/일시정지**하고, **+−+는 다음 곡, −+−는 이전 곡**입니다. 곡을 넘기면 볼륨은 원래 값으로 돌아갑니다. G435 최대 음량에서는 −→+로 누릅니다. 자세한 내용은 [보고서](docs/reports/261031-2341-09-android-play-pause-gesture.md)를 참고합니다.
 

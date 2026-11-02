@@ -1,0 +1,4 @@
+<resources>
+    <!-- Picked automatically when the phone is in dark mode. -->
+    <style name="AppTheme" parent="@android:style/Theme.Material.NoActionBar" />
+</resources>

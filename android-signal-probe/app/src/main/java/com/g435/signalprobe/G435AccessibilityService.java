@@ -5,7 +5,9 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.media.AudioAttributes;
+import android.media.AudioDeviceInfo;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
@@ -28,6 +30,8 @@ public final class G435AccessibilityService extends AccessibilityService {
     // before it counts as play/pause (same as the Windows listener).
     // shortcut: fixed 1 s wait, shorten it if play/pause feels slow or lengthen it if +−+ is missed.
     static final long THIRD_PRESS_WAIT_MS = 1000;
+    // shortcut: same fixed delay as the Windows app, tune it if the G435 still ends up a step off.
+    static final long RESTORE_DELAY_MS = 500;
 
     private final BroadcastReceiver volumeReceiver = new BroadcastReceiver() {
         @Override
@@ -35,13 +39,43 @@ public final class G435AccessibilityService extends AccessibilityService {
             int stream = intent.getIntExtra("android.media.EXTRA_VOLUME_STREAM_TYPE", -1);
             int prev = intent.getIntExtra("android.media.EXTRA_PREV_VOLUME_STREAM_VALUE", -1);
             int value = intent.getIntExtra("android.media.EXTRA_VOLUME_STREAM_VALUE", -1);
-            if (stream == AudioManager.STREAM_MUSIC) {
-                SignalLog.append(context, "volume_change", "prev=" + prev + ", value=" + value);
+            if (stream != AudioManager.STREAM_MUSIC) {
+                return;
+            }
+            SignalLog.append(context, "volume_change", "prev=" + prev + ", value=" + value);
+            // Phone volume keys and other headsets also change STREAM_MUSIC; only the G435 is a gesture source.
+            if (GestureSettings.enabled(context) && isG435Connected()) {
                 onMusicVolumeChanged(prev, value, SystemClock.uptimeMillis());
+            } else {
+                handler.removeCallbacks(playPauseTimeout);
+                runLength = 0;
             }
         }
     };
     private boolean receiverRegistered;
+    // Held in a field: SharedPreferences keeps listeners only weakly.
+    private final SharedPreferences.OnSharedPreferenceChangeListener settingsListener = (prefs, key) -> {
+        if (GestureSettings.ENABLED.equals(key) && !GestureSettings.enabled(this)) {
+            this.handler.removeCallbacks(this.playPauseTimeout);
+            runLength = 0;
+            stopSilenceKeeper();
+        }
+    };
+
+    // shortcut: matches the Bluetooth name, so a headset renamed without "G435" is ignored;
+    // match the Logitech address prefix if the user renames it.
+    private boolean isG435Connected() {
+        for (AudioDeviceInfo device : getSystemService(AudioManager.class).getDevices(AudioManager.GET_DEVICES_OUTPUTS)) {
+            if (device.getType() == AudioDeviceInfo.TYPE_BLUETOOTH_A2DP && isG435Name(device.getProductName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    static boolean isG435Name(CharSequence name) {
+        return name != null && name.toString().toUpperCase(java.util.Locale.ROOT).contains("G435");
+    }
     // Alternating presses so far; the receiver and the timeout both run on the main thread.
     private int runLength;
     private int firstDirection;
@@ -77,9 +111,18 @@ public final class G435AccessibilityService extends AccessibilityService {
         if (runLength == 3) {
             sendMediaKey(gestureKeyCode(runLength, firstDirection));
             runLength = 0;
-            restoringVolume = runStartVolume;
-            getSystemService(AudioManager.class).setStreamVolume(AudioManager.STREAM_MUSIC, runStartVolume, 0);
-            SignalLog.append(this, "gesture", "volume restored to " + runStartVolume);
+            int target = runStartVolume;
+            restoringVolume = target;
+            // Restoring right away moved only the phone: the G435 kept its own level one step off, so the
+            // next press in the other direction arrived as no change and −+− became play/pause (2026-11-02).
+            handler.postDelayed(() -> {
+                getSystemService(AudioManager.class).setStreamVolume(AudioManager.STREAM_MUSIC, target, 0);
+                SignalLog.append(this, "gesture", "volume restored to " + target);
+            }, RESTORE_DELAY_MS);
+        } else if (runLength == 2 && !GestureSettings.skip(this)) {
+            // Without skips there is no third press to wait for.
+            runLength = 0;
+            playPause();
         } else if (runLength == 2) {
             handler.postDelayed(playPauseTimeout, THIRD_PRESS_WAIT_MS);
         }
@@ -119,7 +162,7 @@ public final class G435AccessibilityService extends AccessibilityService {
 
     // About 3 s after playback pauses, Android suspends the A2DP stream and G435 +/− stop
     // reaching the phone, so a resume gesture is never seen. Playing silence keeps the stream up.
-    // shortcut: fixed 10 min limit after a gesture pause; make it a setting if the user wants longer.
+    // 10 min unless the user chose to keep it until resume.
     private static final long SILENCE_KEEPER_MS = 10 * 60 * 1000;
     private static final int SILENCE_RATE = 44100;
     private final Handler handler = new Handler(Looper.getMainLooper());
@@ -145,7 +188,9 @@ public final class G435AccessibilityService extends AccessibilityService {
         silenceKeeper.write(silence, 0, silence.length);
         silenceKeeper.setLoopPoints(0, SILENCE_RATE, -1);
         silenceKeeper.play();
-        handler.postDelayed(silenceTimeout, SILENCE_KEEPER_MS);
+        if (!GestureSettings.silenceForever(this)) {
+            handler.postDelayed(silenceTimeout, SILENCE_KEEPER_MS);
+        }
         SignalLog.append(this, "silence_keeper", "started");
     }
 
@@ -169,12 +214,14 @@ public final class G435AccessibilityService extends AccessibilityService {
             registerReceiver(volumeReceiver, filter);
         }
         receiverRegistered = true;
+        GestureSettings.prefs(this).registerOnSharedPreferenceChangeListener(settingsListener);
         SignalLog.append(this, "accessibility_status", "service_connected");
     }
 
     @Override
     public void onDestroy() {
         stopSilenceKeeper();
+        GestureSettings.prefs(this).unregisterOnSharedPreferenceChangeListener(settingsListener);
         if (receiverRegistered) {
             unregisterReceiver(volumeReceiver);
         }

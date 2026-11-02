@@ -16,3 +16,7 @@ android-signal-probe/.idea/
 android-signal-probe/build/
 android-signal-probe/app/build/
 android-signal-probe/local.properties
+
+# C# build output
+windows-app/bin/
+windows-app/obj/

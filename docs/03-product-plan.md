@@ -33,7 +33,7 @@ G435를 쓰는 사용자가 Bluetooth로 연결한 Windows PC 또는 갤럭시�
 | Android 접근성 | capability 선언 보완 후 키 필터 작동 확인(2026-10-31) |
 | Android 재생/일시정지 | +/− 1.5초 방향 전환 제스처로 구현, Samsung Music·AudioSeeker·Chrome·Brave에서 정지·재개 확인(2026-10-31) |
 | HCI 원시 관측 | 2026-11-01 Android snoop에서 G435→폰 패킷은 +/− 절대 볼륨(AVRCP)과 연결·배터리 HFP뿐. 동시 누름 등 미시험 조합은 미확정 |
-| 미디어 재매핑 | Android와 Windows의 재생/일시정지를 구현·실기기 확인. Windows는 Chrome·Spotify에서 확인(2026-11-01, [보고서](reports/261101-2312-11-windows-play-pause-gesture.md)). Windows 다음/이전 곡(`+−+`/`−+−`)은 Spotify·YouTube 재생목록에서 확인, YouTube 단일 영상은 페이지가 지원하지 않아 불가(2026-11-01). Android 다음/이전은 Chrome YouTube 재생목록·AudioSeeker·Samsung Music에서 확인(2026-11-01 23:56–11-02 00:01), 1회 Chrome이 넘김 지원을 끈 상태라 실패(원인 미확인) |
+| 미디어 재매핑 | Android와 Windows의 재생/일시정지를 구현·실기기 확인. Windows는 Chrome·Spotify에서 확인(2026-11-01, [보고서](reports/261101-2312-11-windows-play-pause-gesture.md)). Windows C# 트레이 앱과 Android 앱에 같은 설정 반영(2026-11-02, [보고서](reports/261102-1345-12-apps-settings-csharp.md)). Windows 다음/이전 곡(`+−+`/`−+−`)은 Spotify·YouTube 재생목록에서 확인, YouTube 단일 영상은 페이지가 지원하지 않아 불가(2026-11-01). Android 다음/이전은 Chrome YouTube 재생목록·AudioSeeker·Samsung Music에서 확인(2026-11-01 23:56–11-02 00:01), 1회 Chrome이 넘김 지원을 끈 상태라 실패(원인 미확인) |
 | 알림 읽기 | 요구사항 검토만 수행, 미구현 |
 
 Windows 로그에서 00:07:39.320의 볼륨은 `0.43067 → 0.49342`, 00:07:44.216은 `0.49342 → 0.43067`이다. 사용자가 요청된 G435 +/−/음소거 시험 완료를 알려준 구간과 대응하지만, 오디오 값만으로 입력 발생 주체를 기술적으로 증명할 수는 없다.
