@@ -30,8 +30,15 @@ static class Gesture
         Check(ActionFor([1, -1]) == MediaAction.PlayPause && ActionFor([-1, 1]) == MediaAction.PlayPause, "play/pause");
         Check(ActionFor([1, -1, 1]) == MediaAction.Next, "next");
         Check(ActionFor([-1, 1, -1]) == MediaAction.Previous, "previous");
+        Check(InQuietHours(0, 360, 0) && InQuietHours(0, 360, 359) && !InQuietHours(0, 360, 360), "00:00–06:00");
+        Check(InQuietHours(1380, 360, 1439) && InQuietHours(1380, 360, 10) && !InQuietHours(1380, 360, 720), "past midnight");
+        Check(!InQuietHours(0, 0, 0), "start == end is off");
         return 0;
     }
+
+    /// <summary>Whether minute-of-day now falls in [start, end), wrapping past midnight; start == end means never.</summary>
+    public static bool InQuietHours(int start, int end, int now) =>
+        start <= end ? now >= start && now < end : now >= start || now < end;
 }
 
 enum MediaAction { PlayPause, Next, Previous }

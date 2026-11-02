@@ -2,6 +2,7 @@ package com.g435.signalprobe;
 
 import static com.g435.signalprobe.G435AccessibilityService.GESTURE_WINDOW_MS;
 import static com.g435.signalprobe.G435AccessibilityService.gestureKeyCode;
+import static com.g435.signalprobe.G435AccessibilityService.inQuietHours;
 import static com.g435.signalprobe.G435AccessibilityService.isG435Name;
 import static com.g435.signalprobe.G435AccessibilityService.isPlayPauseGesture;
 import static org.junit.Assert.assertEquals;
@@ -35,5 +36,16 @@ public class GestureTest {
         assertTrue(isG435Name("g435 bluetooth gaming headset"));
         assertFalse(isG435Name("Galaxy Buds2"));
         assertFalse(isG435Name(null));
+    }
+
+    @Test
+    public void quietHoursWrapPastMidnight() {
+        assertTrue(inQuietHours(0, 360, 0));
+        assertTrue(inQuietHours(0, 360, 359));
+        assertFalse(inQuietHours(0, 360, 360));
+        assertTrue(inQuietHours(1380, 360, 1439));
+        assertTrue(inQuietHours(1380, 360, 10));
+        assertFalse(inQuietHours(1380, 360, 720));
+        assertFalse(inQuietHours(0, 0, 0));
     }
 }

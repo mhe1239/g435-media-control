@@ -22,6 +22,24 @@ sealed class SettingsForm : Form
         var foreverNote = new Label { Text = "무음이 꺼지면 약 10초 뒤부터 G435 버튼으로 재개할 수 없습니다.", AutoSize = true, ForeColor = SystemColors.GrayText };
         var keepAlive = new CheckBox { Text = "G435 자동 꺼짐 방지 (20분마다 무음 10초)", Checked = settings.KeepAlive, AutoSize = true };
         var keepAliveNote = new Label { Text = "G435는 30분 동안 쓰지 않으면 꺼집니다.", AutoSize = true, ForeColor = SystemColors.GrayText };
+        DateTimePicker TimePicker(int minutes) => new()
+        {
+            Format = DateTimePickerFormat.Custom,
+            CustomFormat = "HH:mm",
+            ShowUpDown = true,
+            Width = 70,
+            Value = DateTime.Today.AddMinutes(minutes),
+        };
+        var quietStart = TimePicker(settings.QuietStartMinutes);
+        var quietEnd = TimePicker(settings.QuietEndMinutes);
+        var quiet = new FlowLayoutPanel { AutoSize = true, WrapContents = false, Margin = Padding.Empty };
+        quiet.Controls.AddRange([
+            new Label { Text = "꺼짐 방지 쉬는 시간", AutoSize = true, Anchor = AnchorStyles.Left },
+            quietStart,
+            new Label { Text = "–", AutoSize = true, Anchor = AnchorStyles.Left },
+            quietEnd,
+        ]);
+        var quietNote = new Label { Text = "이 시간에는 쓰지 않는 G435가 스스로 꺼집니다. 두 시각이 같으면 쉬지 않습니다.", AutoSize = true, ForeColor = SystemColors.GrayText };
         var theme = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Width = 200 };
         SystemColorMode[] modes = [SystemColorMode.System, SystemColorMode.Classic, SystemColorMode.Dark];
         theme.Items.AddRange(["시스템 설정 따름", "라이트", "다크"]);
@@ -41,7 +59,10 @@ sealed class SettingsForm : Form
             settings.SkipEnabled = skip.Checked;
             settings.SilenceForever = forever.Checked;
             settings.KeepAlive = keepAlive.Checked;
+            settings.QuietStartMinutes = (int)quietStart.Value.TimeOfDay.TotalMinutes;
+            settings.QuietEndMinutes = (int)quietEnd.Value.TimeOfDay.TotalMinutes;
             skip.Enabled = forever.Enabled = keepAlive.Enabled = enabled.Checked;
+            quiet.Enabled = enabled.Checked && keepAlive.Checked;
             settings.Save();
             changed();
         }
@@ -49,8 +70,11 @@ sealed class SettingsForm : Form
         skip.CheckedChanged += (_, _) => Apply();
         forever.CheckedChanged += (_, _) => Apply();
         keepAlive.CheckedChanged += (_, _) => Apply();
+        quietStart.ValueChanged += (_, _) => Apply();
+        quietEnd.ValueChanged += (_, _) => Apply();
         startup.CheckedChanged += (_, _) => Settings.StartWithWindows = startup.Checked;
         skip.Enabled = forever.Enabled = keepAlive.Enabled = enabled.Checked;
+        quiet.Enabled = enabled.Checked && keepAlive.Checked;
 
         var layout = new FlowLayoutPanel
         {
@@ -60,7 +84,7 @@ sealed class SettingsForm : Form
             Padding = new Padding(16),
             WrapContents = false,
         };
-        layout.Controls.AddRange([status, enabled, skip, skipNote, forever, foreverNote, keepAlive, keepAliveNote, startup, themeLabel, theme]);
+        layout.Controls.AddRange([status, enabled, skip, skipNote, forever, foreverNote, keepAlive, keepAliveNote, quiet, quietNote, startup, themeLabel, theme]);
         foreach (Control c in layout.Controls)
             c.Margin = new Padding(0, 0, 0, c is Label && c != status && c != themeLabel ? 12 : 6);
         status.Margin = new Padding(0, 0, 0, 12);

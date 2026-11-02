@@ -57,7 +57,9 @@ sealed class GestureEngine : IDisposable
 
     void KeepAlive()
     {
-        if (!settings.Enabled || !settings.KeepAlive)
+        var now = DateTime.Now.TimeOfDay;
+        if (!settings.Enabled || !settings.KeepAlive
+            || Gesture.InQuietHours(settings.QuietStartMinutes, settings.QuietEndMinutes, now.Hours * 60 + now.Minutes))
             return;
         lock (silenceGate)
             if (silence != null)

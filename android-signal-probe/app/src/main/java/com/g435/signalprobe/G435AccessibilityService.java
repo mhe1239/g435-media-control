@@ -76,7 +76,10 @@ public final class G435AccessibilityService extends AccessibilityService {
         @Override
         public void onReceive(Context context, Intent intent) {
             // Skipped while anything plays: the G435 is in use, or the paused-player silence already runs.
-            if (silenceKeeper == null && isG435Connected()
+            java.util.Calendar now = java.util.Calendar.getInstance();
+            int minute = now.get(java.util.Calendar.HOUR_OF_DAY) * 60 + now.get(java.util.Calendar.MINUTE);
+            boolean quiet = inQuietHours(GestureSettings.quietStart(context), GestureSettings.quietEnd(context), minute);
+            if (!quiet && silenceKeeper == null && isG435Connected()
                     && !getSystemService(AudioManager.class).isMusicActive()) {
                 startSilenceKeeper(KEEP_ALIVE_PULSE_MS);
             }
@@ -84,6 +87,11 @@ public final class G435AccessibilityService extends AccessibilityService {
         }
     };
     private PendingIntent keepAliveIntent;
+
+    /** Whether minute-of-day now falls in [start, end), wrapping past midnight; start == end means never. */
+    static boolean inQuietHours(int start, int end, int now) {
+        return start <= end ? now >= start && now < end : now >= start || now < end;
+    }
 
     private void scheduleKeepAlive() {
         AlarmManager alarms = getSystemService(AlarmManager.class);

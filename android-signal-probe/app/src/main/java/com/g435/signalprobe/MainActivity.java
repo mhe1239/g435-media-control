@@ -58,14 +58,40 @@ public final class MainActivity extends Activity {
         Switch keepAlive = addSwitch(root, prefs, GestureSettings.KEEP_ALIVE, GestureSettings.keepAlive(this),
                 "G435 자동 꺼짐 방지 (20분마다 무음 10초)",
                 "G435는 30분 동안 쓰지 않으면 꺼집니다.");
-        skip.setEnabled(enabled.isChecked());
-        forever.setEnabled(enabled.isChecked());
-        keepAlive.setEnabled(enabled.isChecked());
+        LinearLayout quiet = new LinearLayout(this);
+        quiet.setOrientation(LinearLayout.HORIZONTAL);
+        quiet.setGravity(android.view.Gravity.CENTER_VERTICAL);
+        TextView quietLabel = new TextView(this);
+        quietLabel.setText("꺼짐 방지 쉬는 시간  ");
+        quiet.addView(quietLabel);
+        Button quietStart = addTimeButton(quiet, prefs, GestureSettings.QUIET_START, GestureSettings.quietStart(this));
+        TextView dash = new TextView(this);
+        dash.setText(" – ");
+        quiet.addView(dash);
+        Button quietEnd = addTimeButton(quiet, prefs, GestureSettings.QUIET_END, GestureSettings.quietEnd(this));
+        root.addView(quiet);
+        TextView quietNote = new TextView(this);
+        quietNote.setText("이 시간에는 쓰지 않는 G435가 스스로 꺼집니다. 두 시각이 같으면 쉬지 않습니다.");
+        quietNote.setAlpha(0.7f);
+        quietNote.setPadding(0, 0, 0, (int) (12 * getResources().getDisplayMetrics().density));
+        root.addView(quietNote);
+
+        Runnable refresh = () -> {
+            boolean on = enabled.isChecked();
+            skip.setEnabled(on);
+            forever.setEnabled(on);
+            keepAlive.setEnabled(on);
+            quietStart.setEnabled(on && keepAlive.isChecked());
+            quietEnd.setEnabled(on && keepAlive.isChecked());
+        };
+        refresh.run();
         enabled.setOnCheckedChangeListener((view, checked) -> {
             prefs.edit().putBoolean(GestureSettings.ENABLED, checked).apply();
-            skip.setEnabled(checked);
-            forever.setEnabled(checked);
-            keepAlive.setEnabled(checked);
+            refresh.run();
+        });
+        keepAlive.setOnCheckedChangeListener((view, checked) -> {
+            prefs.edit().putBoolean(GestureSettings.KEEP_ALIVE, checked).apply();
+            refresh.run();
         });
 
         TextView themeLabel = new TextView(this);
@@ -132,6 +158,20 @@ public final class MainActivity extends Activity {
             noteView.setPadding(0, 0, 0, (int) (12 * getResources().getDisplayMetrics().density));
             root.addView(noteView);
         }
+        return view;
+    }
+
+    private Button addTimeButton(LinearLayout parent, SharedPreferences prefs, String key, int minutes) {
+        Button view = new Button(this);
+        view.setText(String.format(java.util.Locale.ROOT, "%02d:%02d", minutes / 60, minutes % 60));
+        view.setOnClickListener(v -> {
+            int current = prefs.getInt(key, minutes);
+            new android.app.TimePickerDialog(this, (picker, hour, minute) -> {
+                prefs.edit().putInt(key, hour * 60 + minute).apply();
+                view.setText(String.format(java.util.Locale.ROOT, "%02d:%02d", hour, minute));
+            }, current / 60, current % 60, true).show();
+        });
+        parent.addView(view);
         return view;
     }
 

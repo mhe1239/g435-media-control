@@ -9,6 +9,9 @@ sealed class Settings
     public bool SkipEnabled { get; set; } = true;
     public bool SilenceForever { get; set; }
     public bool KeepAlive { get; set; }
+    // Minutes after midnight; keep-alive is off in [start, end) so an unused headset can power off at night.
+    public int QuietStartMinutes { get; set; }
+    public int QuietEndMinutes { get; set; } = 6 * 60;
     // Classic is the light theme.
     public SystemColorMode Theme { get; set; } = SystemColorMode.System;
 
