@@ -11,10 +11,13 @@
     <!-- Application.SetColorMode (light/dark) is still marked experimental. -->
     <NoWarn>$(NoWarn);WFO5001</NoWarn>
     <AssemblyName>G435MediaGesture</AssemblyName>
+    <ApplicationIcon>..\assets\icon\g435.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="NAudio.Wasapi" Version="2.2.1" />
+    <!-- Embedded too, so the tray can load the 16px frame instead of downscaling the 32px exe icon. -->
+    <EmbeddedResource Include="..\assets\icon\g435.ico" LogicalName="g435.ico" />
   </ItemGroup>
 
 </Project>

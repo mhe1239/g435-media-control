@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generated from assets/icon/g435-icon.svg (minus its background). The 512 icon is
+     centered in a 920 viewport so the "+" badge stays inside the 66dp adaptive safe zone. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="920"
+    android:viewportHeight="920">
+    <group android:translateX="204" android:translateY="204">
+        <path android:strokeColor="#FF161616" android:strokeWidth="38" android:pathData="M150,262C150,88 362,88 362,262" />
+        <path android:fillColor="#FF262626" android:pathData="M130,234h0a42,42 0,0 1,42,42v112a42,42 0,0 1,-42,42h0a42,42 0,0 1,-42,-42v-112a42,42 0,0 1,42,-42z" />
+        <path android:fillColor="#FF0E0E0E" android:pathData="M172,244h4a32,32 0,0 1,32,32v112a32,32 0,0 1,-32,32h-4a32,32 0,0 1,-32,-32v-112a32,32 0,0 1,32,-32z" />
+        <path android:fillColor="#FF3C3C3C" android:pathData="M112,272a5,5 0,1 1,10,0a5,5 0,1 1,-10,0z" />
+        <path android:fillColor="#FFD6F01F" android:pathData="M114,288h6a8,8 0,0 1,8,8v14a8,8 0,0 1,-8,8h-6a8,8 0,0 1,-8,-8v-14a8,8 0,0 1,8,-8z" />
+        <path android:fillColor="#FFD6F01F" android:pathData="M116,328h2a10,10 0,0 1,10,10v42a10,10 0,0 1,-10,10h-2a10,10 0,0 1,-10,-10v-42a10,10 0,0 1,10,-10z" />
+        <path android:fillColor="#FF262626" android:pathData="M106,358h22v2h-22z" />
+        <path android:fillColor="#FFD6F01F" android:pathData="M113,400h8a5,5 0,0 1,5,5v4a5,5 0,0 1,-5,5h-8a5,5 0,0 1,-5,-5v-4a5,5 0,0 1,5,-5z" />
+        <path android:fillColor="#FF262626" android:pathData="M382,234h0a42,42 0,0 1,42,42v112a42,42 0,0 1,-42,42h0a42,42 0,0 1,-42,-42v-112a42,42 0,0 1,42,-42z" />
+        <path android:fillColor="#FF0E0E0E" android:pathData="M336,244h4a32,32 0,0 1,32,32v112a32,32 0,0 1,-32,32h-4a32,32 0,0 1,-32,-32v-112a32,32 0,0 1,32,-32z" />
+        <path android:fillColor="#FFA3B0EA" android:pathData="M323,404a75,75 0,1 1,150,0a75,75 0,1 1,-150,0z" />
+        <path android:fillColor="#FFD6F01F" android:pathData="M333,404a65,65 0,1 1,130,0a65,65 0,1 1,-130,0z" />
+        <path android:fillColor="#FF161616" android:pathData="M367,395h62a5,5 0,0 1,5,5v8a5,5 0,0 1,-5,5h-62a5,5 0,0 1,-5,-5v-8a5,5 0,0 1,5,-5z" />
+        <path android:fillColor="#FF161616" android:pathData="M394,368h8a5,5 0,0 1,5,5v62a5,5 0,0 1,-5,5h-8a5,5 0,0 1,-5,-5v-62a5,5 0,0 1,5,-5z" />
+    </group>
+</vector>

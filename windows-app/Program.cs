@@ -39,7 +39,8 @@ static class Program
         // Creating the form installs the WinForms synchronization context used to marshal device updates.
         form = CreateForm();
         ui = SynchronizationContext.Current!;
-        using var tray = new NotifyIcon { Icon = SystemIcons.Application, Text = "G435 미디어 제스처", Visible = true };
+        using var trayIcon = new Icon(typeof(Program).Assembly.GetManifestResourceStream("g435.ico")!, SystemInformation.SmallIconSize);
+        using var tray = new NotifyIcon { Icon = trayIcon, Text = "G435 미디어 제스처", Visible = true };
 
         void ShowSettings()
         {

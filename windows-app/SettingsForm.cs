@@ -13,7 +13,7 @@ sealed class SettingsForm : Form
         AutoSize = true;
         AutoSizeMode = AutoSizeMode.GrowAndShrink;
         StartPosition = FormStartPosition.CenterScreen;
-        Icon = SystemIcons.Application;
+        Icon = new Icon(typeof(SettingsForm).Assembly.GetManifestResourceStream("g435.ico")!);
 
         var enabled = new CheckBox { Text = "제스처 사용", Checked = settings.Enabled, AutoSize = true };
         var skip = new CheckBox { Text = "곡 넘기기 사용 (+−+ 다음 곡, −+− 이전 곡)", Checked = settings.SkipEnabled, AutoSize = true };
