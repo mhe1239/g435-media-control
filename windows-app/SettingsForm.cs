@@ -27,7 +27,7 @@ sealed class SettingsForm : Form
             Format = DateTimePickerFormat.Custom,
             CustomFormat = "HH:mm",
             ShowUpDown = true,
-            Width = 70,
+            Width = 120,
             Value = DateTime.Today.AddMinutes(minutes),
         };
         var quietStart = TimePicker(settings.QuietStartMinutes);
