@@ -15,7 +15,8 @@
 - tested (Android, 2026-11-01 23:55–23:56): 같은 `+−+`/`−+−`를 폰에도 넣었고 Chrome YouTube 재생목록(일시정지·재개 뒤 포함), AudioSeeker(일시정지 중 넘김 포함), Samsung Music(11-02 00:01)에서 넘어갔다. 넘김 뒤 볼륨을 시작 값으로 되돌린다(Android 00:05 확인, Windows 00:10–00:12 확인. Windows는 즉시 복원하면 G435가 자기 볼륨을 다시 보내 덮어써서 0.5초 뒤 복원). 그 전 23:50–23:52에는 Chrome 세션이 넘김 지원(`actions=334`)을 꺼둬 실패했다. 원인 미확인. 확인: `adb shell dumpsys media_session`의 Chrome `actions`(382면 넘김 포함).
 - 2026-11-02 00:17 Android 앱을 정리했다: 진단 화면(MediaSession)과 키 기록을 지우고 사용법·접근성 상태·설정 버튼 화면만 남겼다. 이름은 "G435 미디어 제스처", 패키지는 그대로 `com.g435.signalprobe`. 볼륨·제스처 로그(`files/g435-signal-log.jsonl`)는 유지한다. 이제 화면을 열어도 볼륨을 가로채지 않는다. 접근성 이벤트 종류는 `typeAllMask`로 둬야 한다: `typeAnnouncement`로 줄였더니 삼성 Freecess가 앱을 얼려 볼륨 신호를 놓쳤다(00:19). 되돌린 뒤 00:22 재생/일시정지·다음·이전·볼륨 복원 확인.
 - tested (2026-11-02 13:24–13:41): Windows C# 트레이 앱 `windows-app/`(.NET 10, WinForms, NAudio.Wasapi)과 Android 앱에 같은 설정(제스처 사용, 곡 넘기기 사용, 무음 계속 유지, 테마 시스템/라이트/다크)을 넣고 사용자가 모두 확인했다. G435 연결 시에만 동작(Windows: 기본 출력 이름 2초 폴링, Android: A2DP 이름). Android도 복원을 0.5초 늦춰야 G435와 볼륨이 맞는다. targetSdk 35라 화면에 시스템 바 여백을 준다. [보고서](../docs/reports/261102-1345-12-apps-settings-csharp.md)
-- untested (2026-11-02): 두 앱에 "G435 자동 꺼짐 방지" 설정(기본 끔)을 넣었다. G435는 30분 동안 쓰지 않으면 꺼진다. 20분마다 G435가 연결돼 있고 재생 중이 아니면 무음을 10초 재생한다. Android는 잠든 폰에서도 깨도록 `AlarmManager` 정확한 알람(`USE_EXACT_ALARM`)을 쓴다. G435가 디지털 무음을 사용으로 치는지는 아직 모른다.
+- tested (Android, 2026-11-02 18:20–19:12): 마지막 소리(일시정지 무음 유지 종료 18:20:51) 뒤 51분 동안 18:42, 19:02 무음 10초만 재생됐고 G435는 계속 연결돼 있었다. 알람은 20분 간격으로 정확히 울렸고, 재생 중이던 17:42·18:02는 건너뛰었다. Windows는 미확인.
+- 2026-11-02: 두 앱에 "G435 자동 꺼짐 방지" 설정(기본 끔)을 넣었다. G435는 30분 동안 쓰지 않으면 꺼진다. 20분마다 G435가 연결돼 있고 재생 중이 아니면 무음을 10초 재생한다. Android는 잠든 폰에서도 깨도록 `AlarmManager` 정확한 알람(`USE_EXACT_ALARM`)을 쓴다. G435가 디지털 무음을 사용으로 치는지는 아직 모른다.
 
 ## Decisions and constraints
 
